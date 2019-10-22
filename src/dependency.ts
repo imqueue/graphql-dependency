@@ -164,7 +164,7 @@ export class GraphQLDependency<ResultType> {
     private static gqlType(
         field: GraphQLField<any, any, any>,
     ): GraphQLObjectType {
-        let type: any = field.type;
+        let type = field.type;
 
         if (type instanceof GraphQLList || type instanceof GraphQLNonNull) {
             type = type.ofType;
@@ -285,6 +285,32 @@ export class GraphQLDependency<ResultType> {
     }
 
     /**
+     * Adds id field to all nested structures, to make sure we can always rely
+     * our mapping on identifiers of fetched objects
+     *
+     * @access private
+     * @param {any} fields
+     * @return {any} - updated fields map object
+     */
+    private static ensureIds(fields: any) {
+        if (!fields) {
+            return fields;
+        }
+
+        if (typeof fields.id === 'undefined') {
+            fields.id = false;
+        }
+
+        for (const prop of Object.keys(fields)) {
+            if (fields[prop]) {
+                GraphQLDependency.ensureIds(fields[prop]);
+            }
+        }
+
+        return fields;
+    }
+
+    /**
      * Check if given item matches against elements in given data hash
      * using the given from fields configuration for a given data id key.
      *
@@ -344,7 +370,7 @@ export class GraphQLDependency<ResultType> {
     private options = new Map<
         GraphQLDependency<any>,
         Array<DependencyOptions | DependencyOptionsGetter>
-    >();
+        >();
     private initFieldNames: string[] = [];
 
     /**
@@ -354,7 +380,6 @@ export class GraphQLDependency<ResultType> {
      */
     protected constructor(public readonly type: GraphQLObjectType) {}
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines a loader for this particular dependency. This
      * usually must be a bulk loading function accepting input of
@@ -384,7 +409,6 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines an async initializer for this particular entity. Initializers are
      * usually used to perform async routines required to pre-fill entity
@@ -427,7 +451,6 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines dependencies for this entity.
      * Usually it lays along with the entity definition itself and describes
@@ -457,7 +480,6 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Performs actual work on loading all entities current entity depends on.
      * This will load all dependent entities using pre-defined bulk loaders
@@ -512,6 +534,13 @@ export class GraphQLDependency<ResultType> {
         context: any,
         fields: any,
     ): Promise<ResultType> {
+        if (!fields) {
+            // nothing to do, as long as load fields are not specified
+            return source;
+        }
+
+        GraphQLDependency.ensureIds(fields);
+
         const cache = this.buildResolutionCache(fields, source);
 
         return await this.incrementalLoad(source, context, fields, cache);
