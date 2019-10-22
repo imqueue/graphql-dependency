@@ -4,6 +4,7 @@
   "description": "Cross-service GraphQL dependencies for underlying @imqueue services",
   "main": "index.js",
   "scripts": {
+    "prepack": "npm i && npm run build && npm run clean:ts",
     "prepublishOnly": "npm run build",
     "build": "tsc",
     "mocha": "nyc mocha",
@@ -13,6 +14,7 @@
     "clean:dts": "find . -name '*.d.ts' -not -wholename '*node_modules*' -type f -delete",
     "clean:map": "find . -name '*.js.map' -not -wholename '*node_modules*' -type f -delete",
     "clean:js": "find . -name '*.js' -not -wholename '*node_modules*' -type f -delete",
+    "clean:ts": "find . -name '*.ts' -not -wholename '*node_modules*' -not -wholename '*.d.ts' -type f -delete",
     "clean:test": "rm -rf .nyc_output coverage",
     "clean:doc": "rm -rf docs",
     "clean": "npm run clean:test && npm run clean:dts && npm run clean:map && npm run clean:js && npm run clean:doc",
@@ -29,7 +31,7 @@
     "services",
     "imqueue"
   ],
-  "author": "Mykhailo Stadnyk <mike@imqueue.com>",
+  "author": "imqueue.com <support@imqueue.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/imqueue/graphql-dependency/issues"
@@ -40,6 +42,7 @@
     "graphql": "^14.5.8"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.3",
     "@types/core-js": "^2.5.2",
     "@types/mocha": "^5.2.7",
     "@types/mock-require": "^2.0.0",
