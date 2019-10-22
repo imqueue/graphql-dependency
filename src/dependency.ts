@@ -164,7 +164,7 @@ export class GraphQLDependency<ResultType> {
     private static gqlType(
         field: GraphQLField<any, any, any>,
     ): GraphQLObjectType {
-        let type = field.type;
+        let type: any = field.type;
 
         if (type instanceof GraphQLList || type instanceof GraphQLNonNull) {
             type = type.ofType;
@@ -380,6 +380,7 @@ export class GraphQLDependency<ResultType> {
      */
     protected constructor(public readonly type: GraphQLObjectType) {}
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines a loader for this particular dependency. This
      * usually must be a bulk loading function accepting input of
@@ -409,6 +410,7 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines an async initializer for this particular entity. Initializers are
      * usually used to perform async routines required to pre-fill entity
@@ -451,6 +453,7 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Defines dependencies for this entity.
      * Usually it lays along with the entity definition itself and describes
@@ -480,6 +483,7 @@ export class GraphQLDependency<ResultType> {
         return this;
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Performs actual work on loading all entities current entity depends on.
      * This will load all dependent entities using pre-defined bulk loaders
