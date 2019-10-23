@@ -929,7 +929,12 @@ export class GraphQLDependency<ResultType> {
         dep: GraphQLDependency<any>,
         cache: ResolutionCache,
     ) {
-        const depCache = cache.get(dep.type) as ResolutionCacheData;
+        const depCache = cache.get(dep.type);
+
+        if (!depCache) {
+            return source;
+        }
+
         const filter = this.makeCallArgs(source, option.filter, depCache);
 
         if (GraphQLDependency.isEmptyArg(filter)) {
@@ -945,8 +950,7 @@ export class GraphQLDependency<ResultType> {
         );
 
         if (!(depCache && depCache.calls[hash])) {
-            const callFields = cache.get(this.type).fields;
-            const data = (await dep.loader(context, filter, callFields))
+            const data = (await dep.loader(context, filter, depCache.fields))
                 .reduce((res, next) => {
                     res[next.id] = next;
 
