@@ -201,7 +201,7 @@ export class GraphQLDependency<ResultType> {
             return true;
         }
 
-        return !!filter;
+        return !filter;
     }
 
     /**
