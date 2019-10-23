@@ -110,6 +110,33 @@ export class GraphQLDependency<ResultType> {
         return dep;
     }
 
+    /**
+     * Checks if a given filter arg is empty or not
+     *
+     * @access private
+     * @param {any} filter
+     * @return {boolean}
+     */
+    public static isEmptyArg(filter: any): boolean {
+        if (Array.isArray(filter) && filter.length) {
+            return false;
+        }
+
+        if (filter && typeof filter === 'object') {
+            for (const prop of Object.keys(filter)) {
+                if (Array.isArray(filter[prop]) && filter[prop].length) {
+                    return false;
+                } else if (!filter[prop]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return !filter;
+    }
+
     private static deps = new Map<GraphQLObjectType, GraphQLDependency<any>>();
 
     /**
@@ -171,37 +198,6 @@ export class GraphQLDependency<ResultType> {
         }
 
         return type as GraphQLObjectType;
-    }
-
-    /**
-     * Checks if a given filter arg is empty or not
-     *
-     * @access private
-     * @param {any} filter
-     * @return {boolean}
-     */
-    private static isEmptyArg(filter: any): boolean {
-        if (!filter) {
-            return true;
-        }
-
-        if (Array.isArray(filter) && filter.length) {
-            return false;
-        }
-
-        if (filter && typeof filter === 'object') {
-            for (const prop of Object.keys(filter)) {
-                if (Array.isArray(filter[prop]) && filter[prop].length) {
-                    return false;
-                } else if (!!filter[prop]) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        return !filter;
     }
 
     /**
