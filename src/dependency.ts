@@ -185,7 +185,11 @@ export class GraphQLDependency<ResultType> {
             return true;
         }
 
-        if (typeof filter === 'object') {
+        if (Array.isArray(filter) && filter.length) {
+            return false;
+        }
+
+        if (filter && typeof filter === 'object') {
             for (const prop of Object.keys(filter)) {
                 if (Array.isArray(filter[prop]) && filter[prop].length) {
                     return false;
