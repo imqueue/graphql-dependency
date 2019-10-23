@@ -549,9 +549,7 @@ export class GraphQLDependency<ResultType> {
 
         const cache = this.buildResolutionCache(fields, source);
 
-        return await this.incrementalLoad(
-            source, context, fields, fields, cache,
-        );
+        return await this.incrementalLoad(source, context, fields, cache);
     }
 
     /**
@@ -671,7 +669,6 @@ export class GraphQLDependency<ResultType> {
      * @param {any} source
      * @param {any} context
      * @param {any} fields
-     * @param {any} loadFields
      * @param {ResolutionCache} cache
      * @return {any}
      */
@@ -679,7 +676,6 @@ export class GraphQLDependency<ResultType> {
         source: ResultType,
         context: any,
         fields: any,
-        loadFields: any,
         cache: ResolutionCache,
     ): Promise<ResultType> {
         if (!source) {
@@ -728,7 +724,7 @@ export class GraphQLDependency<ResultType> {
                     }
 
                     promises.push(this.requestLoader(
-                        source, context, option, dep, cache, loadFields,
+                        source, context, option, dep, cache,
                     ));
                 }
             }
@@ -744,13 +740,14 @@ export class GraphQLDependency<ResultType> {
             promises = [];
 
             for (const child of children) {
+                if (!fields[child.field]) {
+                    continue;
+                }
+
                 const src = this.childSource(source, child.field);
-                const childFields = (
-                    cache.get(child.dep.type) as ResolutionCacheData
-                ).fields;
 
                 promises.push(child.dep.incrementalLoad(
-                    src, context, fields[child.field], childFields, cache,
+                    src, context, fields[child.field], cache,
                 ));
             }
 
@@ -923,7 +920,6 @@ export class GraphQLDependency<ResultType> {
      * @param {DependencyOptions} option   - dependency options config
      * @param {GraphQLDependency<any>} dep - loaded dependency object itself
      * @param {ResolutionCache} cache      - Resolution cache object
-     * @param {any} callFields             - merged fields to load with loader
      * @return {any}
      */
     private async requestLoader(
@@ -932,7 +928,6 @@ export class GraphQLDependency<ResultType> {
         option: DependencyOptions,
         dep: GraphQLDependency<any>,
         cache: ResolutionCache,
-        callFields: any,
     ) {
         const depCache = cache.get(dep.type) as ResolutionCacheData;
         const filter = this.makeCallArgs(source, option.filter, depCache);
@@ -950,6 +945,7 @@ export class GraphQLDependency<ResultType> {
         );
 
         if (!(depCache && depCache.calls[hash])) {
+            const callFields = cache.get(this.type).fields;
             const data = (await dep.loader(context, filter, callFields))
                 .reduce((res, next) => {
                     res[next.id] = next;
