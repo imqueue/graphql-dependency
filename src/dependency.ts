@@ -650,7 +650,7 @@ export class GraphQLDependency<ResultType> {
                 ) as any[]);
 
                 return res;
-            }, []))];
+            }, []))].filter(val => !!val);
 
             // for id filters - check against cached data to not load
             // anything being already loaded
