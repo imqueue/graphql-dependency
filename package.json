@@ -4,7 +4,6 @@
   "description": "Cross-service GraphQL dependencies for underlying @imqueue services",
   "main": "index.js",
   "scripts": {
-    "prepack": "npm i && npm run build && npm run clean:ts",
     "prepublishOnly": "npm run build",
     "build": "tsc",
     "mocha": "nyc mocha",
