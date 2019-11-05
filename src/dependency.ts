@@ -122,7 +122,7 @@ export class GraphQLDependency<ResultType> {
     private options = new Map<
         GraphQLDependency<any>,
         Array<DependencyOptions | DependencyOptionsGetter>
-        >();
+    >();
     private initFieldNames: string[] = [];
 
     /**
@@ -579,9 +579,10 @@ export class GraphQLDependency<ResultType> {
                 continue;
             }
 
-            const found = checkDepInit(GraphQLDependency.deps.get(
-                gqlType(gqlFields[field]),
-            ));
+            const found = checkDepInit(
+                this.initFieldNames,
+                GraphQLDependency.deps.get(gqlType(gqlFields[field])),
+            );
 
             if (typeof found !== 'undefined') {
                 return found;

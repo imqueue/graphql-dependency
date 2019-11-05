@@ -275,10 +275,12 @@ export function matchArray(
  * otherwise will return undefined
  *
  * @access private
+ * @param {string[]} initFieldNames
  * @param {GraphQLDependency<any>} dep
  * @return {boolean|undefined}
  */
 export function checkDepInit(
+    initFieldNames: string[],
     dep?: GraphQLDependency<any>,
 ): boolean | undefined {
     if (dep) {
@@ -296,7 +298,7 @@ export function checkDepInit(
             for (const prop of Object.keys(option.filter)) {
                 const filterPropName = option.filter[prop].name;
 
-                if (~this.initFieldNames.indexOf(filterPropName)) {
+                if (~initFieldNames.indexOf(filterPropName)) {
                     // This a field required by dependency
                     // to load and this field is filled by initializer
                     return true;
