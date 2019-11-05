@@ -215,7 +215,7 @@ export function ensureIds(fields: any) {
 export function dataMatcher(
     data: any,
     item: any,
-    from: Array<{ dst: string, src: string }>,
+    from: Array<{ dst: string; src: string }>,
     id: string | number,
 ): boolean {
     const node = data[id];
@@ -223,21 +223,7 @@ export function dataMatcher(
     for (const cfg of from) {
         // if a source of fetching contains list of values to match
         if (Array.isArray(item[cfg.src])) {
-            let found = false;
-
-            for (const el of item[cfg.src]) {
-                // note: we have a strong reason for non-strict
-                // checking here, because of id number->string conversion
-                // during mapping, so that is why we need to ignore linting
-                // rule
-                // tslint:disable-next-line
-                if (node[cfg.dst] == el) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
+            if (!matchArray(item[cfg.src], cfg, node)) {
                 return false;
             }
         } else {
@@ -253,6 +239,34 @@ export function dataMatcher(
     }
 
     return true;
+}
+
+/**
+ * Checks matching node against array of items
+ *
+ * @access private
+ * @param {any[]} items
+ * @param {{ dst: string, src: string }} cfg
+ * @param {any} node
+ * @return boolean
+ */
+export function matchArray(
+    items: any[],
+    cfg: { dst: string; src: string },
+    node: any,
+): boolean {
+    for (const el of items) {
+        // note: we have a strong reason for non-strict
+        // checking here, because of id number->string conversion
+        // during mapping, so that is why we need to ignore linting
+        // rule
+        // tslint:disable-next-line
+        if (node[cfg.dst] == el) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
