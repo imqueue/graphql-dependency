@@ -15,7 +15,6 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-
 import { signature } from '@imqueue/rpc';
 import {
     GraphQLField,
@@ -23,6 +22,7 @@ import {
     GraphQLNonNull,
     GraphQLObjectType,
 } from 'graphql';
+import { GraphQLDependency } from '../dependency';
 import { DependencyOptions, ResolutionCacheDataMap } from '../types';
 
 export enum ResolveMethod {
@@ -253,4 +253,41 @@ export function dataMatcher(
     }
 
     return true;
+}
+
+/**
+ * Checks if a given dep need wait for init
+ * If certain statement can be calculated wil return exact boolean value,
+ * otherwise will return undefined
+ *
+ * @access private
+ * @param {GraphQLDependency<any>} dep
+ * @return {boolean|undefined}
+ */
+export function checkDepInit(
+    dep?: GraphQLDependency<any>,
+): boolean | undefined {
+    if (dep) {
+        const options = this.options.get(dep);
+
+        if (!options) {
+            return false;
+        }
+
+        for (let option of options) {
+            if (typeof option === 'function') {
+                option = option();
+            }
+
+            for (const prop of Object.keys(option.filter)) {
+                const filterPropName = option.filter[prop].name;
+
+                if (~this.initFieldNames.indexOf(filterPropName)) {
+                    // This a field required by dependency
+                    // to load and this field is filled by initializer
+                    return true;
+                }
+            }
+        }
+    }
 }

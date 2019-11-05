@@ -20,6 +20,7 @@ import {
     GraphQLObjectType,
 } from 'graphql';
 import {
+    checkDepInit,
     ensureIds,
     gqlType,
     hash,
@@ -578,31 +579,12 @@ export class GraphQLDependency<ResultType> {
                 continue;
             }
 
-            const type = gqlType(gqlFields[field]);
-            const dep = GraphQLDependency.deps.get(type);
+            const found = checkDepInit(GraphQLDependency.deps.get(
+                gqlType(gqlFields[field]),
+            ));
 
-            if (dep) {
-                const options = this.options.get(dep);
-
-                if (!options) {
-                    return false;
-                }
-
-                for (let option of options) {
-                    if (typeof option === 'function') {
-                        option = option();
-                    }
-
-                    for (const prop of Object.keys(option.filter)) {
-                        const filterPropName = option.filter[prop].name;
-
-                        if (~this.initFieldNames.indexOf(filterPropName)) {
-                            // This a field required by dependency
-                            // to load and this field is filled by initializer
-                            return true;
-                        }
-                    }
-                }
+            if (typeof found !== 'undefined') {
+                return found;
             }
         }
 
