@@ -15,10 +15,7 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-import {
-    GraphQLField,
-    GraphQLObjectType,
-} from 'graphql';
+import { GraphQLField, GraphQLObjectType } from 'graphql';
 import {
     checkDepInit,
     ensureIds,
