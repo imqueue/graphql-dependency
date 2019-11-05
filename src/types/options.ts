@@ -15,5 +15,24 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-export * from './types';
-export * from './dependency';
+import { GraphQLField } from 'graphql';
+
+/**
+ * Options filter interface
+ */
+export interface DependencyFilterOptions {
+    [fieldName: string]: GraphQLField<any, any, any>;
+}
+
+/**
+ * Dependency description options interface
+ */
+export interface DependencyOptions {
+    as: GraphQLField<any, any, any>;
+    filter: DependencyFilterOptions;
+}
+
+/**
+ * Options getter interface
+ */
+export type DependencyOptionsGetter = () => DependencyOptions;

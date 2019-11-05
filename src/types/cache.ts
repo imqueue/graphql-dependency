@@ -15,5 +15,33 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-export * from './types';
-export * from './dependency';
+import { GraphQLObjectType } from 'graphql';
+
+/**
+ * Cached calls map structure
+ */
+export interface ResolutionCallsMap {
+    [hash: string]: boolean;
+}
+
+/**
+ * Cached resolution data map structure
+ */
+export interface ResolutionCacheDataMap {
+    [id: string]: any;
+}
+
+/**
+ * Cached resolution item
+ */
+export interface ResolutionCacheData {
+    fields: any;
+    data: ResolutionCacheDataMap;
+    calls: ResolutionCallsMap;
+}
+
+/**
+ * Map structure describing storage of cached data for a particular
+ * graphql type
+ */
+export type ResolutionCache = Map<GraphQLObjectType, ResolutionCacheData>;

@@ -15,53 +15,27 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-import { signature } from '@imqueue/rpc';
 import {
     GraphQLField,
-    GraphQLList,
-    GraphQLNonNull,
     GraphQLObjectType,
 } from 'graphql';
-
-export interface DataInitializerResult {
-    [id: string]: any;
-}
-export type DataInitializer<T> = (
-    context: any,
-    result: T,
-    fields?: any,
-) => Promise<DataInitializerResult>;
-export type DataLoader<T> = (
-    context: any,
-    filter: any,
-    fields?: any,
-) => Promise<T[]>;
-export interface DependencyFilterOptions {
-    [fieldName: string]: GraphQLField<any, any, any>;
-}
-export interface DependencyOptions {
-    as: GraphQLField<any, any, any>;
-    filter: DependencyFilterOptions;
-}
-export type DependencyOptionsGetter = () => DependencyOptions;
-export interface ResolutionCacheDataMap {
-    [id: string]: any;
-}
-export interface ResolutionCallsMap {
-    [hash: string]: boolean;
-}
-export interface ResolutionCacheData {
-    fields: any;
-    data: ResolutionCacheDataMap;
-    calls: ResolutionCallsMap;
-}
-
-enum ResolveMethod {
-    INITIALIZER,
-    LOADER,
-}
-
-export type ResolutionCache = Map<GraphQLObjectType, ResolutionCacheData>;
+import {
+    ensureIds,
+    gqlType,
+    hash,
+    makeCachedData,
+    mapDependencyData,
+    ResolveMethod,
+} from './helpers';
+import {
+    DataInitializer,
+    DataLoader,
+    DependencyFilterOptions,
+    DependencyOptions,
+    DependencyOptionsGetter,
+    ResolutionCache,
+    ResolutionCacheData,
+} from './types';
 
 /**
  * Class GraphQLDependency
@@ -140,231 +114,6 @@ export class GraphQLDependency<ResultType> {
     }
 
     private static deps = new Map<GraphQLObjectType, GraphQLDependency<any>>();
-
-    /**
-     * Builds cached data map from given source to given data map
-     *
-     * @access private
-     * @param {any} source                 - data source
-     * @param {ResolutionCacheDataMap} map - cached data map
-     * @return {ResolutionCacheDataMap}
-     */
-    private static makeCachedData(
-        source: any,
-        map: ResolutionCacheDataMap,
-    ): ResolutionCacheDataMap {
-        if (!source ) {
-            return map;
-        }
-
-        const src = Array.isArray(source) ? source : [source];
-
-        for (const item of src) {
-            map[item.id] = item;
-        }
-
-        return map;
-    }
-
-    /**
-     * Builds and returns call signature hash
-     *
-     * @access private
-     * @param {GraphQLObjectType} entity - resolution entity type
-     * @param {ResolveMethod} method     - resolution method
-     * @param {...any[]} args            - call arguments
-     * @return {string}
-     */
-    private static hash(
-        entity: GraphQLObjectType,
-        method: ResolveMethod,
-        ...args: any[]
-    ): string {
-        return signature(entity.name, method + '', args);
-    }
-
-    /**
-     * Returns internal type of graphql field definition, so far it will return
-     * proper type for lists, non nulls, etc...
-     *
-     * @param {GraphQLField<any, any, any>} field
-     * @return {GraphQLObjectType}
-     */
-    private static gqlType(
-        field: GraphQLField<any, any, any>,
-    ): GraphQLObjectType {
-        let type: any = field.type;
-
-        if (type instanceof GraphQLList || type instanceof GraphQLNonNull) {
-            type = type.ofType;
-        }
-
-        return type as GraphQLObjectType;
-    }
-
-    /**
-     * Maps dependency data to source object
-     *
-     * @access private
-     * @param {any} source
-     * @param {any} data
-     * @param {DependencyOptions} option
-     * @return {any}
-     */
-    private static mapDependencyData(
-        source: any,
-        data: any,
-        option: DependencyOptions,
-    ) {
-        const src = Array.isArray(source) ? source : [source];
-        const to = option.as.name;
-        const from = Object.keys(option.filter).map(dst => (
-            { dst, src: option.filter[dst].name }
-        ));
-        const isList = option.as.type instanceof GraphQLList;
-
-        for (const item of src) {
-            if (isList) {
-                const nodes = GraphQLDependency.mapList(data, item, from);
-
-                if (nodes) {
-                    item[to] = nodes;
-                }
-            } else {
-                const node = GraphQLDependency.mapItem(data, item, from);
-
-                if (node) {
-                    item[to] = node;
-                }
-            }
-        }
-
-        return source;
-    }
-
-    /**
-     * Maps an array of items from data matching given source item using given
-     * from fields configuration.
-     *
-     * @access private
-     * @param {any} data
-     * @param {any} item
-     * @param {{ dst: string, src: string }[]} from
-     * @return {any[]}
-     */
-    private static mapList(
-        data: any,
-        item: any,
-        from: Array<{ dst: string; src: string }>,
-    ): any[] {
-        const filtered = Object.keys(data).filter(
-            GraphQLDependency.dataMatcher.bind(null, data, item, from),
-        );
-
-        return filtered.map(id => data[id]);
-    }
-
-    /**
-     * Maps a single item from data to a given item using given from fields
-     * configuration.
-     *
-     * @access private
-     * @param {any} data
-     * @param {any} item
-     * @param {{ dst: string, src: string }[]} from
-     * @return {any}
-     */
-    private static mapItem(
-        data: any,
-        item: any,
-        from: Array<{ dst: string; src: string }>,
-    ): any {
-        const id = Object.keys(data).find(
-            GraphQLDependency.dataMatcher.bind(null, data, item, from),
-        );
-
-        return id ? data[id] : undefined;
-    }
-
-    /**
-     * Adds id field to all nested structures, to make sure we can always rely
-     * our mapping on identifiers of fetched objects
-     *
-     * @access private
-     * @param {any} fields
-     * @return {any} - updated fields map object
-     */
-    private static ensureIds(fields: any) {
-        if (!fields) {
-            return fields;
-        }
-
-        if (typeof fields.id === 'undefined') {
-            fields.id = false;
-        }
-
-        for (const prop of Object.keys(fields)) {
-            if (fields[prop]) {
-                GraphQLDependency.ensureIds(fields[prop]);
-            }
-        }
-
-        return fields;
-    }
-
-    /**
-     * Check if given item matches against elements in given data hash
-     * using the given from fields configuration for a given data id key.
-     *
-     * @access private
-     * @param {any} data
-     * @param {any} item
-     * @param {{ dst: string, src: string }[]} from
-     * @param {string | number} id
-     * @return {boolean}
-     */
-    private static dataMatcher(
-        data: any,
-        item: any,
-        from: Array<{ dst: string, src: string }>,
-        id: string | number,
-    ): boolean {
-        const node = data[id];
-
-        for (const cfg of from) {
-            // if a source of fetching contains list of values to match
-            if (Array.isArray(item[cfg.src])) {
-                let found = false;
-
-                for (const el of item[cfg.src]) {
-                    // note: we have a strong reason for non-strict
-                    // checking here, because of id number->string conversion
-                    // during mapping, so that is why we need to ignore linting
-                    // rule
-                    // tslint:disable-next-line
-                    if (node[cfg.dst] == el) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    return false;
-                }
-            } else {
-                // note: we have a strong reason for non-strict
-                // checking here, because of id number->string conversion
-                // during mapping, so that is why we need to ignore linting
-                // rule
-                // tslint:disable-next-line
-                if (node[cfg.dst] != item[cfg.src]) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
 
     private loader: DataLoader<any>;
     private init: DataInitializer<any>;
@@ -545,7 +294,7 @@ export class GraphQLDependency<ResultType> {
             return source;
         }
 
-        GraphQLDependency.ensureIds(fields);
+        ensureIds(fields);
 
         const cache = this.buildResolutionCache(fields, source);
 
@@ -576,7 +325,7 @@ export class GraphQLDependency<ResultType> {
             const cacheData = cache.get(this.type) || {} as ResolutionCacheData;
 
             cacheData.fields = Object.assign(cacheData.fields || {}, fields);
-            cacheData.data = GraphQLDependency.makeCachedData(
+            cacheData.data = makeCachedData(
                 source, cacheData.data || {});
             cacheData.calls = {};
 
@@ -590,7 +339,7 @@ export class GraphQLDependency<ResultType> {
                 continue;
             }
 
-            const type = GraphQLDependency.gqlType(graphqlFields[field]);
+            const type = gqlType(graphqlFields[field]);
             const dep = GraphQLDependency.deps.get(type);
 
             if (dep) {
@@ -601,7 +350,7 @@ export class GraphQLDependency<ResultType> {
                     cacheData.fields || {},
                     fields[field],
                 );
-                cacheData.data = GraphQLDependency.makeCachedData(
+                cacheData.data = makeCachedData(
                     src, cacheData.data || {});
                 cacheData.calls = {};
 
@@ -706,7 +455,7 @@ export class GraphQLDependency<ResultType> {
                 continue;
             }
 
-            const type = GraphQLDependency.gqlType(gqlFields[field]);
+            const type = gqlType(gqlFields[field]);
             const dep = GraphQLDependency.deps.get(type);
 
             if (dep) {
@@ -829,7 +578,7 @@ export class GraphQLDependency<ResultType> {
                 continue;
             }
 
-            const type = GraphQLDependency.gqlType(gqlFields[field]);
+            const type = gqlType(gqlFields[field]);
             const dep = GraphQLDependency.deps.get(type);
 
             if (dep) {
@@ -877,19 +626,19 @@ export class GraphQLDependency<ResultType> {
         fields: any,
         cache: ResolutionCache,
     ) {
-        const hash = GraphQLDependency.hash(
+        const key = hash(
             this.type, ResolveMethod.INITIALIZER, fields,
         );
         const thisCache = cache.get(this.type);
         let initData: any;
 
-        if (thisCache && thisCache.calls[hash]) {
-            initData = thisCache.calls[hash];
+        if (thisCache && thisCache.calls[key]) {
+            initData = thisCache.calls[key];
         } else {
             initData = await this.init(context, source, fields);
 
             if (thisCache) {
-                thisCache.calls[hash] = initData;
+                thisCache.calls[key] = initData;
             }
         }
 
@@ -940,16 +689,16 @@ export class GraphQLDependency<ResultType> {
         if (GraphQLDependency.isEmptyArg(filter)) {
             // nothing to load, so just make sure we can map existing
             // data from the resolution cache
-            return GraphQLDependency.mapDependencyData(
+            return mapDependencyData(
                 source, depCache.data, option,
             );
         }
 
-        const hash = GraphQLDependency.hash(
+        const key = hash(
             dep.type, ResolveMethod.LOADER, filter,
         );
 
-        if (!(depCache && depCache.calls[hash])) {
+        if (!(depCache && depCache.calls[key])) {
             const data = (await dep.loader(context, filter, depCache.fields))
                 .reduce((res, next) => {
                     res[next.id] = next;
@@ -957,11 +706,11 @@ export class GraphQLDependency<ResultType> {
                     return res;
                 }, {});
 
-            depCache.calls[hash] = data;
+            depCache.calls[key] = data;
             Object.assign(depCache.data, data);
         }
 
-        return GraphQLDependency.mapDependencyData(
+        return mapDependencyData(
             source, depCache.data, option,
         );
     }

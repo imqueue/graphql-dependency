@@ -15,5 +15,11 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-export * from './types';
-export * from './dependency';
+/**
+ * Data loader handler interface
+ */
+export type DataLoader<T> = (
+    context: any,
+    filter: any,
+    fields?: any,
+) => Promise<T[]>;

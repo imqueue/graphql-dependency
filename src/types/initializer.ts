@@ -15,5 +15,18 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-export * from './types';
-export * from './dependency';
+/**
+ * Data initializer result interface
+ */
+export interface DataInitializerResult {
+    [id: string]: any;
+}
+
+/**
+ * Data initializer handler interfaced
+ */
+export type DataInitializer<T> = (
+    context: any,
+    result: T,
+    fields?: any,
+) => Promise<DataInitializerResult>;

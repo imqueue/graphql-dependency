@@ -15,5 +15,7 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-export * from './types';
-export * from './dependency';
+export * from './initializer';
+export * from './loader';
+export * from './options';
+export * from './cache';
