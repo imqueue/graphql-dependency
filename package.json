@@ -27,7 +27,10 @@
   "keywords": [
     "graphql",
     "dependency",
-    "services",
+    "data-loader",
+    "dependency-graph",
+    "dependency-loader",
+    "graphql-dependency",
     "imqueue"
   ],
   "author": "imqueue.com <support@imqueue.com>",
