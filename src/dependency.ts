@@ -128,7 +128,7 @@ export class GraphQLDependency<ResultType> {
      * @constructor
      * @param {GraphQLObjectType} type - associated GraphQL type
      */
-    protected constructor(public readonly type: GraphQLObjectType) {}
+    protected constructor(public readonly type: GraphQLObjectType) { }
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -292,7 +292,8 @@ export class GraphQLDependency<ResultType> {
             return source;
         }
 
-        this.initFieldNames = this.initFields.map(field => field().name);
+        this.initFieldNames = (this.initFields || [])
+            .map(field => field().name);
 
         ensureIds(fields);
 
