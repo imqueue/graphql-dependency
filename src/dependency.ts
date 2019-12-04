@@ -28,6 +28,7 @@ import {
 import {
     DataInitializer,
     DataLoader,
+    DependencyFieldsGetter,
     DependencyFilterOptions,
     DependencyOptions,
     DependencyOptionsGetter,
@@ -114,8 +115,8 @@ export class GraphQLDependency<ResultType> {
     private static deps = new Map<GraphQLObjectType, GraphQLDependency<any>>();
 
     private loader: DataLoader<any>;
-    private init: DataInitializer<any>;
-    private initFields: Array<GraphQLField<any, any, any>>;
+    private init?: DataInitializer<any>;
+    private initFields: DependencyFieldsGetter[];
     private options = new Map<
         GraphQLDependency<any>,
         Array<DependencyOptions | DependencyOptionsGetter>
@@ -193,11 +194,10 @@ export class GraphQLDependency<ResultType> {
      */
     public defineInitializer(
         initializer: DataInitializer<ResultType>,
-        ...fields: Array<GraphQLField<any, any, any>>
+        ...fields: DependencyFieldsGetter[]
     ): GraphQLDependency<ResultType> {
         this.init = initializer;
         this.initFields = fields;
-        this.initFieldNames = this.initFields.map(field => field.name);
 
         return this;
     }
@@ -291,6 +291,8 @@ export class GraphQLDependency<ResultType> {
             // nothing to do, as long as load fields are not specified
             return source;
         }
+
+        this.initFieldNames = this.initFields.map(field => field().name);
 
         ensureIds(fields);
 
@@ -614,7 +616,7 @@ export class GraphQLDependency<ResultType> {
 
         if (thisCache && thisCache.calls[key]) {
             initData = thisCache.calls[key];
-        } else {
+        } else if (this.init) {
             initData = await this.init(context, source, fields);
 
             if (thisCache) {
