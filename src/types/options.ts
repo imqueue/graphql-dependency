@@ -36,3 +36,4 @@ export interface DependencyOptions {
  * Options getter interface
  */
 export type DependencyOptionsGetter = () => DependencyOptions;
+export type DependencyFieldsGetter = () => GraphQLField<any, any, any>;
