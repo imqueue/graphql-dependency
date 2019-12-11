@@ -284,7 +284,7 @@ export function checkDepInit(
     dep?: GraphQLDependency<any>,
 ): boolean | undefined {
     if (dep) {
-        const options = this.options.get(dep);
+        const options = this.options && this.options.get(dep);
 
         if (!options) {
             return false;
