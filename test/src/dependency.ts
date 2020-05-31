@@ -1,5 +1,5 @@
 /*!
- * @imqueue/sequelize - Sequelize ORM refines for @imqueue
+ * @imqueue/graphql-dependency - Declarative GraphQL dependency loading
  *
  * Copyright (c) 2019, imqueue.com <support@imqueue.com>
  *
