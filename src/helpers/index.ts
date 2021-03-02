@@ -19,7 +19,6 @@ import { signature } from '@imqueue/rpc';
 import {
     GraphQLField,
     GraphQLList,
-    GraphQLNonNull,
     GraphQLObjectType,
 } from 'graphql';
 import { GraphQLDependency } from '../dependency';
@@ -83,9 +82,10 @@ export function gqlType(
     field: GraphQLField<any, any, any>,
 ): GraphQLObjectType {
     let type: any = field.type;
+    let ofType: any;
 
-    if (type instanceof GraphQLList || type instanceof GraphQLNonNull) {
-        type = type.ofType;
+    while ((ofType = type.ofType)) {
+        type = ofType;
     }
 
     return type as GraphQLObjectType;
