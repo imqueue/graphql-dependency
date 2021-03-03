@@ -110,7 +110,8 @@ export function mapDependencyData(
     const from = Object.keys(option.filter).map(dst => (
         { dst, src: option.filter[dst].name }
     ));
-    const isList = option.as.type instanceof GraphQLList;
+    const isList = option.as.type instanceof GraphQLList ||
+        option.as.type.constructor.name === 'GraphQLList';
 
     for (const item of src) {
         if (isList) {
