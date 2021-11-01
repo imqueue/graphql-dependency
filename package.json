@@ -1,6 +1,6 @@
 {
   "name": "@imqueue/graphql-dependency",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Cross-service GraphQL dependencies for underlying @imqueue services",
   "main": "index.js",
   "scripts": {
