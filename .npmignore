@@ -3,6 +3,7 @@
 .dockerignore
 .codebeatignore
 .codebeatsettings
+.github
 
 .ssh/
 dist/
@@ -43,3 +44,4 @@ test/
 tsconfig.json
 
 *.tgz
+.github
