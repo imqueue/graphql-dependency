@@ -17,7 +17,7 @@
     "clean:test": "rm -rf .nyc_output coverage",
     "clean:doc": "rm -rf docs",
     "clean": "npm run clean:test && npm run clean:dts && npm run clean:map && npm run clean:js && npm run clean:doc",
-    "doc": "npm run clean:doc && typedoc --excludePrivate --excludeExternals --hideGenerator --exclude \"**/+(debug|test|node_modules|docs|coverage|.nyc_output)/**/*\" --mode file --out ./docs . && npm run show:doc",
+    "doc": "npm run clean:doc && typedoc --excludePrivate --excludeExternals --hideGenerator --exclude \"**/+(debug|test|node_modules|docs|coverage|.nyc_output)/**/*\" --out ./docs . && npm run show:doc",
     "help": "npm-scripts-help"
   },
   "repository": {
