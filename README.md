@@ -1,14 +1,12 @@
 # @imqueue/graphql-dependency
 
-[![Build Status](https://travis-ci.com/graphql-dependency/graphql-dependency.svg?branch=master)](https://travis-ci.com/imqueue/graphql-dependency)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/imqueue/graphql-dependency/build.yml)](https://github.com/imqueue/graphql-dependency)
 [![codebeat badge](https://codebeat.co/badges/87c59873-d921-4a57-981b-9f8e0743776b)](https://codebeat.co/projects/github-com-imqueue-graphql-dependency-master)
 [![Coverage Status](https://coveralls.io/repos/github/imqueue/graphql-dependency/badge.svg?branch=master)](https://coveralls.io/github/imqueue/graphql-dependency?branch=master)
-[![David](https://img.shields.io/david/imqueue/graphql-dependency.svg)](https://david-dm.org/imqueue/graphql-dependency)
-[![David](https://img.shields.io/david/dev/imqueue/graphql-dependency.svg)](https://david-dm.org/imqueue/graphql-dependency?type=dev)
 [![Known Vulnerabilities](https://snyk.io/test/github/imqueue/graphql-dependency/badge.svg?targetFile=package.json)](https://snyk.io/test/github/imqueue/graphql-dependency?targetFile=package.json)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://rawgit.com/imqueue/cli/master/LICENSE)
 
-Cross service GraphQL dependency loading during query calls for @imqueue
+Cross-service GraphQL dependency loading during query calls for @imqueue
 ecosystem.
 
 # Install
@@ -260,6 +258,7 @@ it will end up in a data mapping without an additional calls for each nesting
 levels. Most of the data are not copied and is mapped by references, so the
 memory footprint will be kept on minimal level as well.
 
-# License
+## License
 
-[ISC](https://github.com/imqueue/graphql-dependency/blob/master/LICENSE)
+This project is licensed under the GNU General Public License v3.0.
+See the [LICENSE](LICENSE)
