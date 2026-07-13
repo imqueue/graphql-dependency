@@ -21,7 +21,7 @@
  * purchase a proprietary commercial license. Please contact us at
  * <support@imqueue.com> to get commercial licensing options.
  */
-import { GraphQLField } from 'graphql';
+import { type GraphQLField } from 'graphql';
 
 /**
  * Options filter interface
