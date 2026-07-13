@@ -1,8 +1,6 @@
 # @imqueue/graphql-dependency
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/imqueue/graphql-dependency/build.yml)](https://github.com/imqueue/graphql-dependency)
-[![codebeat badge](https://codebeat.co/badges/87c59873-d921-4a57-981b-9f8e0743776b)](https://codebeat.co/projects/github-com-imqueue-graphql-dependency-master)
-[![Coverage Status](https://coveralls.io/repos/github/imqueue/graphql-dependency/badge.svg?branch=master)](https://coveralls.io/github/imqueue/graphql-dependency?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/imqueue/graphql-dependency/badge.svg?targetFile=package.json)](https://snyk.io/test/github/imqueue/graphql-dependency?targetFile=package.json)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://rawgit.com/imqueue/cli/master/LICENSE)
 
