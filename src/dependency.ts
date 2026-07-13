@@ -21,7 +21,7 @@
  * purchase a proprietary commercial license. Please contact us at
  * <support@imqueue.com> to get commercial licensing options.
  */
-import { GraphQLField, GraphQLObjectType } from 'graphql';
+import { GraphQLObjectType } from 'graphql';
 import {
     checkDepInit,
     ensureIds,
@@ -30,17 +30,17 @@ import {
     makeCachedData,
     mapDependencyData,
     ResolveMethod,
-} from './helpers';
+} from './helpers/index.js';
 import {
-    DataInitializer,
-    DataLoader,
-    DependencyFieldsGetter,
-    DependencyFilterOptions,
-    DependencyOptions,
-    DependencyOptionsGetter,
-    ResolutionCache,
-    ResolutionCacheData,
-} from './types';
+    type DataInitializer,
+    type DataLoader,
+    type DependencyFieldsGetter,
+    type DependencyFilterOptions,
+    type DependencyOptions,
+    type DependencyOptionsGetter,
+    type ResolutionCache,
+    type ResolutionCacheData,
+} from './types/index.js';
 
 /**
  * Class GraphQLDependency
@@ -66,7 +66,6 @@ import {
  * definition between objects.
  */
 export class GraphQLDependency<ResultType> {
-
     /**
      * Creates dependency entity registering it with internal registry
      * for further use. Use this method to construct entities as far as
@@ -120,9 +119,9 @@ export class GraphQLDependency<ResultType> {
 
     private static deps = new Map<GraphQLObjectType, GraphQLDependency<any>>();
 
-    private loader: DataLoader<any>;
+    private loader!: DataLoader<any>;
     private init?: DataInitializer<any>;
-    private initFields: DependencyFieldsGetter[];
+    private initFields!: DependencyFieldsGetter[];
     private options = new Map<
         GraphQLDependency<any>,
         Array<DependencyOptions | DependencyOptionsGetter>
@@ -134,7 +133,7 @@ export class GraphQLDependency<ResultType> {
      * @constructor
      * @param {GraphQLObjectType} type - associated GraphQL type
      */
-    protected constructor(public readonly type: GraphQLObjectType) { }
+    protected constructor(public readonly type: GraphQLObjectType) {}
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -298,8 +297,9 @@ export class GraphQLDependency<ResultType> {
             return source;
         }
 
-        this.initFieldNames = (this.initFields || [])
-            .map(field => field().name);
+        this.initFieldNames = (this.initFields || []).map(
+            field => field().name,
+        );
 
         ensureIds(fields);
 
@@ -329,11 +329,11 @@ export class GraphQLDependency<ResultType> {
         const graphqlFields = this.type.getFields();
 
         if (source) {
-            const cacheData = cache.get(this.type) || {} as ResolutionCacheData;
+            const cacheData =
+                cache.get(this.type) || ({} as ResolutionCacheData);
 
             cacheData.fields = Object.assign(cacheData.fields || {}, fields);
-            cacheData.data = makeCachedData(
-                source, cacheData.data || {});
+            cacheData.data = makeCachedData(source, cacheData.data || {});
             cacheData.calls = {};
 
             cache.set(this.type, cacheData);
@@ -350,15 +350,15 @@ export class GraphQLDependency<ResultType> {
             const dep = GraphQLDependency.deps.get(type);
 
             if (dep) {
-                const cacheData = cache.get(type) || {} as ResolutionCacheData;
+                const cacheData =
+                    cache.get(type) || ({} as ResolutionCacheData);
                 const src = this.childSource(source as any, field);
 
                 cacheData.fields = Object.assign(
                     cacheData.fields || {},
                     fields[field],
                 );
-                cacheData.data = makeCachedData(
-                    src, cacheData.data || {});
+                cacheData.data = makeCachedData(src, cacheData.data || {});
                 cacheData.calls = {};
 
                 cache.set(type, cacheData);
@@ -396,21 +396,26 @@ export class GraphQLDependency<ResultType> {
         const src: any[] = Array.isArray(source) ? source : [source];
 
         for (const prop of Object.keys(filter)) {
-            arg[prop] = [...new Set(src.reduce((res, item) => {
-                res.push(...(
-                    Array.isArray(item[filter[prop].name])
-                        ? item[filter[prop].name]
-                        : [item[filter[prop].name]]
-                ) as any[]);
+            arg[prop] = [
+                ...new Set(
+                    src.reduce((res, item) => {
+                        res.push(
+                            ...((Array.isArray(item[filter[prop].name])
+                                ? item[filter[prop].name]
+                                : [item[filter[prop].name]]) as any[]),
+                        );
 
-                return res;
-            }, []))].filter(val => !!val);
+                        return res;
+                    }, []),
+                ),
+            ].filter(val => !!val);
 
             // for id filters - check against cached data to not load
             // anything being already loaded
             if (prop === 'id') {
-                arg[prop] = arg[prop].filter((id: any) =>
-                    !(cache && cache.data && cache.data[id]));
+                arg[prop] = arg[prop].filter(
+                    (id: any) => !(cache && cache.data && cache.data[id]),
+                );
             }
         }
 
@@ -441,17 +446,17 @@ export class GraphQLDependency<ResultType> {
         let promises: Array<Promise<any>> = [];
         const gqlFields = this.type.getFields();
         const children: Array<{
-            field: string,
-            dep: GraphQLDependency<any>,
+            field: string;
+            dep: GraphQLDependency<any>;
         }> = [];
 
         if (this.init) {
             if (this.waitForInit(fields, gqlFields)) {
                 await this.requestInitializer(source, context, fields, cache);
             } else {
-                promises.push(this.requestInitializer(
-                    source, context, fields, cache,
-                ));
+                promises.push(
+                    this.requestInitializer(source, context, fields, cache),
+                );
             }
         }
 
@@ -479,9 +484,9 @@ export class GraphQLDependency<ResultType> {
                         option = option();
                     }
 
-                    promises.push(this.requestLoader(
-                        source, context, option, dep, cache,
-                    ));
+                    promises.push(
+                        this.requestLoader(source, context, option, dep, cache),
+                    );
                 }
             }
         }
@@ -502,9 +507,14 @@ export class GraphQLDependency<ResultType> {
 
                 const src = this.childSource(source, child.field);
 
-                promises.push(child.dep.incrementalLoad(
-                    src, context, fields[child.field], cache,
-                ));
+                promises.push(
+                    child.dep.incrementalLoad(
+                        src,
+                        context,
+                        fields[child.field],
+                        cache,
+                    ),
+                );
             }
 
             if (promises.length) {
@@ -615,9 +625,7 @@ export class GraphQLDependency<ResultType> {
         fields: any,
         cache: ResolutionCache,
     ) {
-        const key = hash(
-            this.type, ResolveMethod.INITIALIZER, fields,
-        );
+        const key = hash(this.type, ResolveMethod.INITIALIZER, fields);
         const thisCache = cache.get(this.type);
         let initData: any;
 
@@ -678,30 +686,25 @@ export class GraphQLDependency<ResultType> {
         if (GraphQLDependency.isEmptyArg(filter)) {
             // nothing to load, so just make sure we can map existing
             // data from the resolution cache
-            return mapDependencyData(
-                source, depCache.data, option,
-            );
+            return mapDependencyData(source, depCache.data, option);
         }
 
-        const key = hash(
-            dep.type, ResolveMethod.LOADER, filter,
-        );
+        const key = hash(dep.type, ResolveMethod.LOADER, filter);
 
         if (!(depCache && depCache.calls[key])) {
-            const data = (await dep.loader(context, filter, depCache.fields))
-                .reduce((res, next) => {
-                    res[next.id] = next;
+            const data = (
+                await dep.loader(context, filter, depCache.fields)
+            ).reduce((res, next) => {
+                res[next.id] = next;
 
-                    return res;
-                }, {});
+                return res;
+            }, {});
 
             depCache.calls[key] = data;
             Object.assign(depCache.data, data);
         }
 
-        return mapDependencyData(
-            source, depCache.data, option,
-        );
+        return mapDependencyData(source, depCache.data, option);
     }
 }
 

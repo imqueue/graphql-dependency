@@ -21,7 +21,7 @@
  * purchase a proprietary commercial license. Please contact us at
  * <support@imqueue.com> to get commercial licensing options.
  */
-export * from './initializer';
-export * from './loader';
-export * from './options';
-export * from './cache';
+export * from './initializer.js';
+export * from './loader.js';
+export * from './options.js';
+export * from './cache.js';

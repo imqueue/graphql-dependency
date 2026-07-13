@@ -4,21 +4,21 @@
   "description": "Cross-service GraphQL dependencies for underlying @imqueue services",
   "main": "index.js",
   "scripts": {
-    "prepublishOnly": "npm run build",
-    "build": "tsc",
-    "mocha": "nyc mocha",
-    "show:test": "/usr/bin/env node -e \"import('open').then(open => open.default('file://`pwd`/coverage/index.html',{wait:false}));\"",
-    "show:doc": "/usr/bin/env node -e \"import('open').then(open => open.default('file://`pwd`/docs/index.html',{wait:false}));\"",
-    "test": "npm run build && npm run mocha && npm run show:test",
-    "clean:dts": "find . -name '*.d.ts' -not -wholename '*node_modules*' -type f -delete",
-    "clean:map": "find . -name '*.js.map' -not -wholename '*node_modules*' -type f -delete",
-    "clean:js": "find . -name '*.js' -not -wholename '*node_modules*' -type f -delete",
-    "clean:ts": "find . -name '*.ts' -not -wholename '*node_modules*' -not -wholename '*.d.ts' -type f -delete",
-    "clean:test": "rm -rf .nyc_output coverage",
-    "clean:doc": "rm -rf docs",
-    "clean": "npm run clean:test && npm run clean:dts && npm run clean:map && npm run clean:js && npm run clean:doc",
-    "doc": "npm run clean:doc && typedoc --excludePrivate --excludeExternals --hideGenerator --exclude \"**/+(debug|test|node_modules|docs|coverage|.nyc_output)/**/*\" --out ./docs . && npm run show:doc",
-    "help": "npm-scripts-help"
+    "prepare": "npm run build",
+    "build": "npm run clean-compiled && tsc",
+    "lint": "oxlint",
+    "format": "oxfmt \"index.ts\" \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "oxfmt --check \"index.ts\" \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test": "npm run build && node --test --test-timeout=15000 $(find test -name '*.spec.js')",
+    "test-coverage": "npm run build && node --enable-source-maps --test --experimental-test-coverage --test-timeout=15000 $(find test -name '*.spec.js')",
+    "test-lcov": "npm run build && mkdir -p coverage && node --enable-source-maps --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 $(find test -name '*.spec.js'); node scripts/strip-comment-coverage.mjs coverage/lcov.info",
+    "test-coverage-html": "npm run test-lcov; genhtml coverage/lcov.info --output-directory coverage/html --ignore-errors inconsistent,corrupt,format,mismatch && echo \"Coverage report: file://$(pwd)/coverage/html/index.html\"",
+    "clean-typedefs": "find . -name '*.d.ts' -not -wholename '*node_modules*' -type f -delete",
+    "clean-maps": "find . -name '*.js.map' -not -wholename '*node_modules*' -type f -delete",
+    "clean-js": "find . -name '*.js' -not -wholename '*node_modules*' -not -wholename '*scripts*' -type f -delete",
+    "clean-compiled": "npm run clean-js && npm run clean-typedefs && npm run clean-maps",
+    "clean-tests": "rm -rf .nyc_output coverage",
+    "clean": "npm run clean-tests && npm run clean-compiled"
   },
   "repository": {
     "type": "git",
@@ -40,62 +40,24 @@
   },
   "homepage": "https://github.com/imqueue/graphql-dependency#readme",
   "dependencies": {
-    "@imqueue/rpc": "^2.0.17",
     "graphql": "^16.11.0"
   },
   "devDependencies": {
-    "@types/chai": "^5.2.2",
-    "@types/core-js": "^2.5.8",
-    "@types/mocha": "^10.0.10",
-    "@types/mock-require": "^3.0.0",
-    "@types/node": "^24.3.1",
-    "@types/sinon": "^17.0.4",
-    "chai": "^6.0.1",
-    "highlight.js": "^11.11.1",
-    "minimist": "^1.2.8",
-    "mocha": "^11.7.2",
-    "mocha-lcov-reporter": "^1.3.0",
-    "mock-require": "^3.0.3",
-    "npm-scripts-help": "^0.8.0",
-    "nyc": "^17.1.0",
-    "open": "^10.2.0",
-    "reflect-metadata": "^0.2.2",
-    "sinon": "^21.0.0",
-    "source-map-support": "^0.5.21",
-    "ts-node": "^10.9.2",
-    "tslint": "^6.1.3",
-    "typedoc": "^0.28.12",
-    "typescript": "^5.9.2"
+    "@types/node": "^24.13.3",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0",
+    "typescript": "^7.0.2"
   },
-  "typescript": {
-    "definitions": "index.d.ts"
+  "type": "module",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "mocha": {
-    "require": [
-      "ts-node/register",
-      "source-map-support/register"
-    ],
-    "recursive": true,
-    "bail": true,
-    "full-trace": true
-  },
-  "nyc": {
-    "check-coverage": false,
-    "extension": [
-      ".ts"
-    ],
-    "exclude": [
-      "**/*.d.ts",
-      "**/test/**"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "reporter": [
-      "html",
-      "text",
-      "text-summary",
-      "lcovonly"
-    ]
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

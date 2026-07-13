@@ -21,14 +21,13 @@
  * purchase a proprietary commercial license. Please contact us at
  * <support@imqueue.com> to get commercial licensing options.
  */
-import { signature } from '@imqueue/rpc';
+import { signature } from '../signature.js';
+import { type GraphQLField, GraphQLList, GraphQLObjectType } from 'graphql';
+import { GraphQLDependency } from '../dependency.js';
 import {
-    GraphQLField,
-    GraphQLList,
-    GraphQLObjectType,
-} from 'graphql';
-import { GraphQLDependency } from '../dependency';
-import { DependencyOptions, ResolutionCacheDataMap } from '../types';
+    type DependencyOptions,
+    type ResolutionCacheDataMap,
+} from '../types/index.js';
 
 export enum ResolveMethod {
     INITIALIZER,
@@ -47,7 +46,7 @@ export function makeCachedData(
     source: any,
     map: ResolutionCacheDataMap,
 ): ResolutionCacheDataMap {
-    if (!source ) {
+    if (!source) {
         return map;
     }
 
@@ -84,9 +83,7 @@ export function hash(
  * @param {GraphQLField<any, any, any>} field
  * @return {GraphQLObjectType}
  */
-export function gqlType(
-    field: GraphQLField<any, any, any>,
-): GraphQLObjectType {
+export function gqlType(field: GraphQLField<any, any, any>): GraphQLObjectType {
     let type: any = field.type;
     let ofType: any;
 
@@ -113,10 +110,12 @@ export function mapDependencyData(
 ) {
     const src = Array.isArray(source) ? source : [source];
     const to = option.as.name;
-    const from = Object.keys(option.filter).map(dst => (
-        { dst, src: option.filter[dst].name }
-    ));
-    const isList = option.as.type instanceof GraphQLList ||
+    const from = Object.keys(option.filter).map(dst => ({
+        dst,
+        src: option.filter[dst].name,
+    }));
+    const isList =
+        option.as.type instanceof GraphQLList ||
         option.as.type.constructor.name === 'GraphQLList';
 
     for (const item of src) {
@@ -175,9 +174,7 @@ export function mapItem(
     item: any,
     from: Array<{ dst: string; src: string }>,
 ): any {
-    const id = Object.keys(data).find(
-        dataMatcher.bind(null, data, item, from),
-    );
+    const id = Object.keys(data).find(dataMatcher.bind(null, data, item, from));
 
     return id ? data[id] : undefined;
 }
@@ -287,6 +284,7 @@ export function matchArray(
  * @return {boolean|undefined}
  */
 export function checkDepInit(
+    this: any,
     initFieldNames: string[],
     dep?: GraphQLDependency<any>,
 ): boolean | undefined {

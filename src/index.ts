@@ -21,5 +21,5 @@
  * purchase a proprietary commercial license. Please contact us at
  * <support@imqueue.com> to get commercial licensing options.
  */
-export * from './types';
-export * from './dependency';
+export * from './types/index.js';
+export * from './dependency.js';
