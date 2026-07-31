@@ -22,14 +22,33 @@
  * <support@imqueue.com> to get commercial licensing options.
  */
 /**
- * Data initializer result interface
+ * What an initializer gives back: the extra fields to merge onto each object,
+ * keyed by that object's `id`.
+ *
+ * @remarks
+ * Each value is merged onto the matching object with `Object.assign`, so it
+ * holds only the fields being added — not a replacement object. An id with no
+ * matching object is ignored, and an object whose id is absent here is left
+ * exactly as it was.
  */
 export interface DataInitializerResult {
+    /**
+     * The fields to merge onto the object with this `id`.
+     */
     [id: string]: any;
 }
 
 /**
- * Data initializer handler interfaced
+ * An async routine that fills extra fields onto a type's own objects before its
+ * dependencies load, registered with `defineInitializer()`.
+ *
+ * @remarks
+ * Its job is to supply what a dependency filter needs but the initial result
+ * does not carry — foreign ids that have to be fetched or derived first, for
+ * instance. It is handed the resolver context, the objects loaded so far, and
+ * the fields the request asked for, and returns a map keyed by object id.
+ *
+ * @typeParam T - the shape of the result set being initialized
  */
 export type DataInitializer<T> = (
     context: any,

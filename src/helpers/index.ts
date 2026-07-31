@@ -23,24 +23,27 @@
  */
 import { signature } from '../signature.js';
 import { type GraphQLField, GraphQLList, GraphQLObjectType } from 'graphql';
-import { GraphQLDependency } from '../dependency.js';
 import {
     type DependencyOptions,
+    type DependencyOptionsGetter,
     type ResolutionCacheDataMap,
 } from '../types/index.js';
 
+/**
+ * Which kind of call a cache signature identifies, so an initializer and a
+ * loader for the same type and arguments never collide on one hash.
+ */
 export enum ResolveMethod {
     INITIALIZER,
     LOADER,
 }
 
 /**
- * Builds cached data map from given source to given data map
+ * Indexes objects by `id` into the request's data map for their type.
  *
- * @access private
- * @param {any} source                 - data source
- * @param {ResolutionCacheDataMap} map - cached data map
- * @return {ResolutionCacheDataMap}
+ * @param source - one object or many; a falsy value leaves the map untouched
+ * @param map - the map to fill
+ * @returns the same map, extended
  */
 export function makeCachedData(
     source: any,
@@ -60,13 +63,12 @@ export function makeCachedData(
 }
 
 /**
- * Builds and returns call signature hash
+ * Builds the cache key for one initializer or loader call.
  *
- * @access private
- * @param {GraphQLObjectType} entity - resolution entity type
- * @param {ResolveMethod} method     - resolution method
- * @param {...any[]} args            - call arguments
- * @return {string}
+ * @param entity - the type being resolved
+ * @param method - which kind of call it is
+ * @param args - the call arguments, folded into the hash
+ * @returns a hex signature identifying this call
  */
 export function hash(
     entity: GraphQLObjectType,
@@ -77,11 +79,16 @@ export function hash(
 }
 
 /**
- * Returns internal type of graphql field definition, so far it will return
- * proper type for lists, non nulls, etc...
+ * Unwraps a field's type down to the object type underneath, so a
+ * `[User!]!` field resolves to `User`.
  *
- * @param {GraphQLField<any, any, any>} field
- * @return {GraphQLObjectType}
+ * @remarks
+ * Follows `ofType` until it runs out, which peels off any depth of `GraphQLList`
+ * and `GraphQLNonNull` wrappers. Needed because a dependency is registered
+ * against the bare object type while schema fields are usually wrapped.
+ *
+ * @param field - the field whose type to unwrap
+ * @returns the object type at the centre of it
  */
 export function gqlType(field: GraphQLField<any, any, any>): GraphQLObjectType {
     let type: any = field.type;
@@ -95,13 +102,20 @@ export function gqlType(field: GraphQLField<any, any, any>): GraphQLObjectType {
 }
 
 /**
- * Maps dependency data to source object
+ * Attaches loaded children to their parents, writing each match to the field the
+ * requirement names.
  *
- * @access private
- * @param {any} source
- * @param {any} data
- * @param {DependencyOptions} option
- * @return {any}
+ * @remarks
+ * Whether a parent gets a list or a single object comes from the target field's
+ * own GraphQL type, not from how many matches there are — so a `GraphQLList`
+ * field receives every match and a plain one receives the first. A parent with no
+ * match is left alone rather than given an empty value, which keeps "not
+ * requested" and "none found" distinguishable downstream.
+ *
+ * @param source - the parent objects
+ * @param data - the loaded children, keyed by id
+ * @param option - the requirement being satisfied
+ * @returns `source`, mutated in place
  */
 export function mapDependencyData(
     source: any,
@@ -138,14 +152,12 @@ export function mapDependencyData(
 }
 
 /**
- * Maps an array of items from data matching given source item using given
- * from fields configuration.
+ * Collects every loaded object matching one parent, for a list-typed field.
  *
- * @access private
- * @param {any} data
- * @param {any} item
- * @param {{ dst: string, src: string }[]} from
- * @return {any[]}
+ * @param data - the loaded objects, keyed by id
+ * @param item - the parent to match against
+ * @param from - the field pairs to compare, child key to parent key
+ * @returns the matching objects
  */
 export function mapList(
     data: any,
@@ -160,14 +172,12 @@ export function mapList(
 }
 
 /**
- * Maps a single item from data to a given item using given from fields
- * configuration.
+ * Finds the first loaded object matching one parent, for a singular field.
  *
- * @access private
- * @param {any} data
- * @param {any} item
- * @param {{ dst: string, src: string }[]} from
- * @return {any}
+ * @param data - the loaded objects, keyed by id
+ * @param item - the parent to match against
+ * @param from - the field pairs to compare, child key to parent key
+ * @returns the match, or `undefined` if there is none
  */
 export function mapItem(
     data: any,
@@ -180,12 +190,16 @@ export function mapItem(
 }
 
 /**
- * Adds id field to all nested structures, to make sure we can always rely
- * our mapping on identifiers of fetched objects
+ * Adds `id` to every level of a requested-fields map, since matching loaded
+ * objects to their parents has nothing else to go on.
  *
- * @access private
- * @param {any} fields
- * @return {any} - updated fields map object
+ * @remarks
+ * Mutates the map it is given rather than copying it — the caller's `fields`
+ * object comes back changed. Where `id` was not requested it is added as `false`,
+ * which asks the loader for the value without putting it in the response.
+ *
+ * @param fields - the requested-fields map to complete
+ * @returns the same map
  */
 export function ensureIds(fields: any) {
     if (!fields) {
@@ -206,15 +220,19 @@ export function ensureIds(fields: any) {
 }
 
 /**
- * Check if given item matches against elements in given data hash
- * using the given from fields configuration for a given data id key.
+ * Tests whether one loaded object belongs to one parent, across every field pair
+ * the requirement names.
  *
- * @access private
- * @param {any} data
- * @param {any} item
- * @param {{ dst: string, src: string }[]} from
- * @param {string | number} id
- * @return {boolean}
+ * @remarks
+ * All pairs must match. Comparison is deliberately non-strict: ids routinely
+ * cross the service boundary as a number on one side and a string on the other,
+ * and `1 === '1'` would break every such relation.
+ *
+ * @param data - the loaded objects, keyed by id
+ * @param item - the parent to match against
+ * @param from - the field pairs to compare, child key to parent key
+ * @param id - which loaded object to test
+ * @returns `true` when the object belongs to the parent
  */
 export function dataMatcher(
     data: any,
@@ -246,13 +264,18 @@ export function dataMatcher(
 }
 
 /**
- * Checks matching node against array of items
+ * Matches a loaded object against a parent field holding several values, as a
+ * list of foreign ids does.
  *
- * @access private
- * @param {any[]} items
- * @param {{ dst: string, src: string }} cfg
- * @param {any} node
- * @return boolean
+ * @remarks
+ * Any one value matching is enough. Non-strict for the same reason as
+ * {@link dataMatcher}: the two sides often disagree on whether an id is a number
+ * or a string.
+ *
+ * @param items - the parent field's values
+ * @param cfg - the field pair being compared
+ * @param node - the loaded object to test
+ * @returns `true` when any value matches
  */
 export function matchArray(
     items: any[],
@@ -274,41 +297,41 @@ export function matchArray(
 }
 
 /**
- * Checks if a given dep need wait for init
- * If certain statement can be calculated wil return exact boolean value,
- * otherwise will return undefined
+ * Reports whether any of the given dependency requirements filters on a field
+ * that the parent's initializer is responsible for filling — which is what
+ * forces the initializer to finish before that dependency can be loaded.
  *
- * @access private
- * @param {string[]} initFieldNames
- * @param {GraphQLDependency<any>} dep
- * @return {boolean|undefined}
+ * @remarks
+ * This used to take the dependency and read the requirements off `this`,
+ * declaring `this: any` so a caller could supply the parent with `.call()`. The
+ * one caller did not, so every invocation threw on `this.options` and no
+ * initializer could be used at all. The requirements are now an ordinary
+ * parameter and there is nothing left to bind.
+ *
+ * @param initFieldNames - names of the fields the initializer fills
+ * @param options - the parent's requirements for one dependency, as registered
+ *                  by `require()`; getters are resolved here
+ * @returns `true` when a requirement's filter reads an initializer field
  */
 export function checkDepInit(
-    this: any,
     initFieldNames: string[],
-    dep?: GraphQLDependency<any>,
-): boolean | undefined {
-    if (dep) {
-        const options = this.options && this.options.get(dep);
-
-        if (!options) {
-            return false;
+    options?: Array<DependencyOptions | DependencyOptionsGetter>,
+): boolean {
+    for (let option of options || []) {
+        if (typeof option === 'function') {
+            option = option();
         }
 
-        for (let option of options) {
-            if (typeof option === 'function') {
-                option = option();
-            }
+        for (const prop of Object.keys(option.filter)) {
+            const filterPropName = option.filter[prop].name;
 
-            for (const prop of Object.keys(option.filter)) {
-                const filterPropName = option.filter[prop].name;
-
-                if (~initFieldNames.indexOf(filterPropName)) {
-                    // This a field required by dependency
-                    // to load and this field is filled by initializer
-                    return true;
-                }
+            if (~initFieldNames.indexOf(filterPropName)) {
+                // this field is read by a dependency filter and is filled by
+                // the initializer, so loading has to wait for it
+                return true;
             }
         }
     }
+
+    return false;
 }

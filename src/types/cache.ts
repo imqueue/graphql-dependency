@@ -24,30 +24,68 @@
 import { GraphQLObjectType } from 'graphql';
 
 /**
- * Cached calls map structure
+ * The loader and initializer calls already made during a request, keyed by a
+ * hash of the call's signature.
+ *
+ * @remarks
+ * This is what stops two requirements that reduce to the same lookup from
+ * costing two round trips: the second finds the first one's entry and reuses it.
+ * The hash covers the type, which of the two kinds of call it was, and the
+ * arguments.
+ *
+ * The stored value is the call's own result — an id-keyed map of loaded objects
+ * for a loader, or the initializer's result map. This was declared `boolean` in
+ * earlier releases, which described the truthiness test at the read site rather
+ * than what is actually kept.
  */
 export interface ResolutionCallsMap {
-    [hash: string]: boolean;
+    /**
+     * The result of the call this hash identifies, reused instead of repeating
+     * it.
+     */
+    [hash: string]: any;
 }
 
 /**
- * Cached resolution data map structure
+ * Every object of one type seen so far in a request, keyed by `id`.
  */
 export interface ResolutionCacheDataMap {
+    /**
+     * The object carrying this `id`.
+     */
     [id: string]: any;
 }
 
 /**
- * Cached resolution item
+ * One type's entry in the resolution cache.
  */
 export interface ResolutionCacheData {
+    /**
+     * The union of the fields every part of the request asked of this type.
+     * Merging them means a type reached from several directions is fetched with
+     * one field set wide enough for all of them, rather than once per caller.
+     */
     fields: any;
+
+    /**
+     * The objects of this type already in hand, keyed by id. Ids found here are
+     * dropped from a loader's filter, so nothing is fetched twice.
+     */
     data: ResolutionCacheDataMap;
+
+    /**
+     * The calls already made for this type, so an identical one is not repeated.
+     */
     calls: ResolutionCallsMap;
 }
 
 /**
- * Map structure describing storage of cached data for a particular
- * graphql type
+ * Everything one `load()` call has resolved, one entry per participating type.
+ *
+ * @remarks
+ * Created per request and discarded when `load()` returns — nothing is shared
+ * between requests, so no request can be served another's stale data. It is
+ * keyed by the `GraphQLObjectType` object itself, which is also how dependency
+ * descriptions are registered.
  */
 export type ResolutionCache = Map<GraphQLObjectType, ResolutionCacheData>;

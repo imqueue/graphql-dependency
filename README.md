@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/imqueue/graphql-dependency/build.yml)](https://github.com/imqueue/graphql-dependency)
 [![Known Vulnerabilities](https://snyk.io/test/github/imqueue/graphql-dependency/badge.svg?targetFile=package.json)](https://snyk.io/test/github/imqueue/graphql-dependency?targetFile=package.json)
-[![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://rawgit.com/imqueue/cli/master/LICENSE)
+[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://rawgit.com/imqueue/cli/master/LICENSE)
 
 Cross-service GraphQL dependency loading during query calls for @imqueue
 ecosystem.

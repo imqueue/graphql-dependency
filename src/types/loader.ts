@@ -22,7 +22,19 @@
  * <support@imqueue.com> to get commercial licensing options.
  */
 /**
- * Data loader handler interface
+ * A bulk fetch for one entity type, registered with `defineLoader()` and called
+ * whenever that type is needed as another type's dependency.
+ *
+ * @remarks
+ * Every object returned must carry an `id`: results are keyed by it and attached
+ * to their parents by it, and one without an `id` is silently unreachable.
+ *
+ * `filter` arrives with a *set* of values under each key rather than one value,
+ * because a whole level of parent objects is fetched in a single call — so the
+ * implementation has to treat every key as a list. Its shape is decided by the
+ * `require()` calls that point at this type.
+ *
+ * @typeParam T - the entity type being loaded
  */
 export type DataLoader<T> = (
     context: any,
