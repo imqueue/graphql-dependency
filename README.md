@@ -1,11 +1,16 @@
 # @imqueue/graphql-dependency
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/imqueue/graphql-dependency/build.yml)](https://github.com/imqueue/graphql-dependency)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/imqueue/graphql-dependency/build.yml)](https://github.com/imqueue/graphql-dependency/actions/workflows/build.yml)
+[![npm version](https://img.shields.io/npm/v/@imqueue/graphql-dependency)](https://www.npmjs.com/package/@imqueue/graphql-dependency)
 [![Known Vulnerabilities](https://snyk.io/test/github/imqueue/graphql-dependency/badge.svg?targetFile=package.json)](https://snyk.io/test/github/imqueue/graphql-dependency?targetFile=package.json)
-[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://rawgit.com/imqueue/cli/master/LICENSE)
+[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/imqueue/graphql-dependency/blob/master/LICENSE)
 
 Cross-service GraphQL dependency loading during query calls for @imqueue
 ecosystem.
+
+**Using an AI assistant?** Point it at [imqueue.org/llms.txt](https://imqueue.org/llms.txt)
+for a machine-readable index of the docs. Current version, licence and Node floor
+for every package: [imqueue.org/status.json](https://imqueue.org/status.json).
 
 # Install
 
