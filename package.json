@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/imqueue/graphql-dependency.git"
+    "url": "git+https://github.com/imqueue/graphql-dependency.git"
   },
   "keywords": [
     "graphql",
